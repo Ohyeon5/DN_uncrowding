@@ -7,15 +7,11 @@ under MIT license
 the GDN non-linearity based on the papers:
 
 "Density Modeling of Images using a Generalized Normalization Transformation"
-
 Johannes Ballé, Valero Laparra, Eero P. Simoncelli
-
 https://arxiv.org/abs/1511.06281
 
 "End-to-end Optimized Image Compression"
-
 Johannes Ballé, Valero Laparra, Eero P. Simoncelli
-
 https://arxiv.org/abs/1611.01704
 
 The implementation is based on the available Tensorflow implementation un the contrib package (https://www.tensorflow.org/api_docs/python/tf/contrib/layers/gdn)
