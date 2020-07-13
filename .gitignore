@@ -1,0 +1,9 @@
+# data files
+/data
+/model_checkpoints
+/figs
+/__pycache__
+
+# log files
+*.log
+training_log.txt
