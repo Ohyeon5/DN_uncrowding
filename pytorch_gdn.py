@@ -14,7 +14,7 @@ https://arxiv.org/abs/1511.06281
 Johannes Ballé, Valero Laparra, Eero P. Simoncelli
 https://arxiv.org/abs/1611.01704
 
-The implementation is based on the available Tensorflow implementation un the contrib package (https://www.tensorflow.org/api_docs/python/tf/contrib/layers/gdn)
+The implementation is based on the available Tensorflow implementation in the contrib package (https://www.tensorflow.org/api_docs/python/tf/contrib/layers/gdn)
 '''
 
 import torch
