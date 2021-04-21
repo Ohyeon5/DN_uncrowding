@@ -15,7 +15,6 @@ from oh_specs import *
 
 # Define normalization type
 def define_norm(norm_type,n_channel,n_group=None):
-	print('Norm_type is {}, and norm_type is in is {}'.format(norm_type, norm_type == 'in'))
 	# Referred to https://pytorch.org/docs/stable/_modules/torch/nn/modules/normalization.html
 	if norm_type == 'bn':  # Batch normalization
 		return nn.BatchNorm2d(n_channel)
