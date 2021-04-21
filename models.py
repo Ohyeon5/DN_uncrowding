@@ -15,6 +15,7 @@ from oh_specs import *
 
 # Define normalization type
 def define_norm(norm_type,n_channel,n_group=None):
+	print('Norm_type is {}, and norm_type is in is {}'.format(norm_type, norm_type is 'in'))
 	# Referred to https://pytorch.org/docs/stable/_modules/torch/nn/modules/normalization.html
 	if norm_type is 'bn':  # Batch normalization
 		return nn.BatchNorm2d(n_channel)
@@ -65,7 +66,7 @@ class feedforwardCNN(nn.Module):
 		else:
 			norm = [norm]*3
 
-		print('Norms are {}'.format(norm[0]))
+		print('Norms are {}'.format(norm))
 
 		self.conv0 = nn.Conv2d( 3,  8, kernel_size=ini_k[0], stride=ini_s[0], padding=ini_p[0])
 		self.norm0 = define_norm(norm[0],  8, n_group)
