@@ -74,6 +74,8 @@ class feedforwardCNN(nn.Module):
 		self.conv2 = nn.Conv2d(16, 32, kernel_size=ini_k[2], stride=ini_s[2], padding=ini_p[2])
 		self.norm2 = define_norm(norm[2], 32, n_group)
 
+		print(self.norm0)
+
 		self.early_decoder = nn.Sequential(
 		      nn.BatchNorm1d(flatten_len),
 		      nn.Linear(flatten_len,hidden_dim),
