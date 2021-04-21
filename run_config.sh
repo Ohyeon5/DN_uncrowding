@@ -4,10 +4,9 @@
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 1
 #SBATCH --partition=gpu
-#SBATCH --qos=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --mem 8192
-#SBATCH --time 1:00:00
+#SBATCH --time 3:00:00
 
 module load gcc python cuda
 source venvs/torch/bin/activate
