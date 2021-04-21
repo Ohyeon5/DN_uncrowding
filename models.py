@@ -65,7 +65,7 @@ class feedforwardCNN(nn.Module):
 		else:
 			norm = [norm]*3
 
-		print('Norms are {}'.format(norm))
+		print('Norms are {}'.format(norm[0]))
 
 		self.conv0 = nn.Conv2d( 3,  8, kernel_size=ini_k[0], stride=ini_s[0], padding=ini_p[0])
 		self.norm0 = define_norm(norm[0],  8, n_group)
@@ -73,8 +73,6 @@ class feedforwardCNN(nn.Module):
 		self.norm1 = define_norm(norm[1], 16, n_group)
 		self.conv2 = nn.Conv2d(16, 32, kernel_size=ini_k[2], stride=ini_s[2], padding=ini_p[2])
 		self.norm2 = define_norm(norm[2], 32, n_group)
-
-		print(self.norm0)
 
 		self.early_decoder = nn.Sequential(
 		      nn.BatchNorm1d(flatten_len),
