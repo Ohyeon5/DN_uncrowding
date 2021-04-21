@@ -8,4 +8,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem 8192
 #SBATCH --time 1:00:00
-python -u "/home/choung/DN_uncrowding/main.py"
+
+module load gcc python cuda
+source venvs/torch/bin/activate
+
+srun python /home/choung/DN_uncrowding/main.py --norm_types ['in','bn','gn','ln']
