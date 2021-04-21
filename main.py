@@ -11,7 +11,7 @@ from oh_specs import *
 from models import *
 
 
-def test(parser, norm='bn'):
+def test(parser, norm='in'):
 
 	# test trained kernels with surround suppression kernel
 

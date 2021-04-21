@@ -1,0 +1,12 @@
+Training logs and todolists
+
+Restarted training on 20th Apr 2021
+
+TRAINING LOG
+
+
+TODOLIST
+1. Retrain and retest the known normalizations
+ - batch norm, group norm, instance norm, layer norm, and style norm
+2. Try style norm and restitution one
+3. Maybe change training scheme 

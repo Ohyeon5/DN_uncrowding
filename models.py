@@ -13,14 +13,14 @@ from oh_specs import *
 # Define normalization type
 def define_norm(norm_type,n_channel,n_group=None):
 	# Referred to https://pytorch.org/docs/stable/_modules/torch/nn/modules/normalization.html
-	if norm_type is 'bn':
+	if norm_type is 'bn':  # Batch normalization
 		return nn.BatchNorm2d(n_channel)
-	elif norm_type is 'gn':
+	elif norm_type is 'gn':# Group normalization
 		if n_group is None: n_group=2 # default group num is 2
 		return nn.GroupNorm(n_group,n_channel)
-	elif norm_type is 'in':
+	elif norm_type is 'in':# instance normalization
 		return nn.GroupNorm(n_channel,n_channel)
-	elif norm_type is 'ln':
+	elif norm_type is 'ln':# layer normalization
 		return nn.GroupNorm(1,n_channel)
 	elif norm_type is 'None':
 		bypass = lambda a: a
