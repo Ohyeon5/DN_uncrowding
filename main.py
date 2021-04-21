@@ -306,7 +306,7 @@ def get_parser():
 if __name__ == '__main__':
 	parser = get_parser().parse_args()
 	if parser.train:
-		print('TRAIN ...')
+		print('TRAIN norm_types... {}'.format(parser.norm_types))
 		for norm in parser.norm_types:
 			for subj in range(0,parser.n_subjs):
 				train(parser,norm=norm, subj=subj)

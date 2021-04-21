@@ -9,4 +9,4 @@ TODOLIST
 1. Retrain and retest the known normalizations
  - batch norm, group norm, instance norm, layer norm, and style norm
 2. Try style norm and restitution one
-3. Maybe change training scheme 
+3. Maybe change the training scheme 

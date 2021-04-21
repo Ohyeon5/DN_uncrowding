@@ -1,4 +1,7 @@
 # models of DN_normalizations
+#
+# Author: Oh-hyeon Choung 
+
 
 # import relevant packages
 import os, sys
