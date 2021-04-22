@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem 4096
 #SBATCH --account lpsy
-#SBATCH --time 3:00:00
+#SBATCH --time 5:00:00
 
 module load gcc python cuda mvapich2
 source venvs/torch/bin/activate
