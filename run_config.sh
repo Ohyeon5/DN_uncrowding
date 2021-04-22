@@ -14,4 +14,4 @@ source venvs/torch/bin/activate
 
 git pull https://Ohyeon5:glt55_TT@github.com/Ohyeon5/DN_uncrowding.git
 
-srun python /home/choung/DN_uncrowding/main.py -i -g -t --norm_types in gn bn ln
+srun python /home/choung/DN_uncrowding/main.py -i -g -t --norm_types gn bn ln
