@@ -193,8 +193,8 @@ class StimMaker:
 
         resizeFactor = 1.0
         patch  = numpy.zeros((self.shapeSize, self.shapeSize))
-        center = (int(self.shapeSize/2), int(self.shapeSize/2))
-        radius = self.shapeSize/(2*resizeFactor)
+        center = (self.shapeSize//2, self.shapeSize//2)
+        radius = self.shapeSize//(2*resizeFactor)
 
         rowExtVertices = []
         colExtVertices = []
