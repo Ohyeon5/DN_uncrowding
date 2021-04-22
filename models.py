@@ -653,7 +653,82 @@ def channel_entropy(x, kernel_size=5,device='cpu'):
 	return entropy.unsqueeze(-1).unsqueeze(-1)
 
 
+# Define model 6: feedforward model + SNR (Jin, et al., CVPR 2020)
+class feedforwardSNRCNN(nn.Module):
+	""" 
+	Feedforward CNN network with Style normalization and restitution.
+	SNR module is largely adapted from https://github.com/microsoft/SNR by Jin et al.
+	"""
 
+	def __init__(self, hidden_dim=32, n_shapes=5,input_size=[224,224],norm='in_SNR',n_group=None, device='cpu'):
+
+		super(feedforwardCNN, self).__init__()
+
+		# specify conv params
+		ini_k = [7,5,3]
+		ini_s = [4,3,1]
+		ini_p = [2,1,1]
+
+		# Calculate flatten len
+		def outsize(i,k,s,p):
+			return floor((i+2*p-k+s)/s)
+
+		fin_unit_len    = [32,0,0]
+		fin_unit_len[1] = outsize(outsize(outsize(input_size[0],ini_k[0],ini_s[0],ini_p[0]),ini_k[1],ini_s[1],ini_p[1]),ini_k[2],ini_s[2],ini_p[2])
+		fin_unit_len[2] = outsize(outsize(outsize(input_size[1],ini_k[0],ini_s[0],ini_p[0]),ini_k[1],ini_s[1],ini_p[1]),ini_k[2],ini_s[2],ini_p[2])
+		flatten_len     = reduce(lambda a,b: a*b, fin_unit_len)
+
+		self.device = device
+
+		if 'in' in norm:
+			norms = norm.split('_')
+			if len(norms) is 1:
+				norm = [norm]*3
+			else:
+				norm = ['None']*3
+				for mm in norms[1]:
+					norm[int(mm)] = 'in'
+		else:
+			norm = [norm]*3
+
+		print('Norms are {}'.format(norm))
+
+		self.conv0 = nn.Conv2d( 3,  8, kernel_size=ini_k[0], stride=ini_s[0], padding=ini_p[0])
+		self.norm0 = define_norm(norm[0],  8, n_group)
+		self.conv1 = nn.Conv2d( 8, 16, kernel_size=ini_k[1], stride=ini_s[1], padding=ini_p[1])
+		self.norm1 = define_norm(norm[1], 16, n_group)
+		self.conv2 = nn.Conv2d(16, 32, kernel_size=ini_k[2], stride=ini_s[2], padding=ini_p[2])
+		self.norm2 = define_norm(norm[2], 32, n_group)
+
+		self.early_decoder = nn.Sequential(
+		      nn.BatchNorm1d(flatten_len),
+		      nn.Linear(flatten_len,hidden_dim),
+		      nn.ReLU(inplace=True))
+		self.shape_decoder = nn.Sequential(
+		      nn.Linear(hidden_dim,n_shapes),
+		      nn.Softmax())
+		self.vernier_decoder = nn.Sequential(
+		      nn.Linear(hidden_dim,2),
+		      nn.Softmax())	
+    
+	def forward(self, x):
+
+		x = self.conv0(x)
+		x = self.norm0(x) 
+		x = F.relu(x)
+		x = self.conv1(x)
+		x = self.norm1(x) 
+		x = F.relu(x)
+		x = self.conv2(x)
+		x = self.norm2(x)
+		x = F.relu(x)
+
+		x = torch.flatten(x, start_dim=1) # flatten tensor from channel dimension (torch tensor: b c w h)
+		x = self.early_decoder(x)
+		output_shape   = self.shape_decoder(x)
+		output_vernier = self.vernier_decoder(x)      
+
+		return output_shape, output_vernier
 
 
 

@@ -10,3 +10,6 @@ TODOLIST
  - batch norm, group norm, instance norm, layer norm, and style norm
 2. Try style norm and restitution one
 3. Maybe change the training scheme 
+ - How about also using soft labels??? (sq-st-sq-st-sq: (sq,st)=(3/5,2/5))
+   => Because, otherwise, interpretations will be exactly as same as Capsnet
+4. Toy-model, then to ResNet (or other pretrained models), to get some inductive bias already..
