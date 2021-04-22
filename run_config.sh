@@ -10,7 +10,7 @@
 #SBATCH --time 5:00:00
 
 module load gcc python cuda mvapich2
-source venvs/torch/bin/activate
+source /home/choung/venvs/torch/bin/activate
 
 git pull https://Ohyeon5:glt55_TT@github.com/Ohyeon5/DN_uncrowding.git
 
