@@ -406,6 +406,8 @@ class StimMaker:
             patch[patch > 1.0] = 1.0
 
         print(shapeMatrix.shape[0],shapeMatrix.shape[1], critDist,shapeMatrix.shape[0]*self.shapeSize + (shapeMatrix.shape[0]-1)*critDist + 1)
+        print(padDist, self.imSize[0] - (patch.shape[0]+padDist))
+        print(padDist, self.imSize[1] - (patch.shape[1]+padDist))
         if fixed_position is None:
             firstRow = random.randint(padDist, self.imSize[0] - (patch.shape[0]+padDist))
             firstCol = random.randint(padDist, self.imSize[1] - (patch.shape[1]+padDist))
