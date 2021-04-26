@@ -59,8 +59,6 @@ def shape_label_patterns(batchSize, shapeIDs=[0,1,6], softLabel=False):
     else:
         shapeLabels = [[1 if shapeIDs[i] in numpy.array(shapeMatrix[b]) else 0 for i in range(nIDs)] for b in range(batchSize)]
 
-    print(batchSize, shapeIDs)
-    print(shapeMatrix, shapeLabels)
     return shapeMatrix, shapeLabels
 
 
@@ -486,7 +484,9 @@ class StimMaker:
 
         if make_shape_label_patterns is not None:
             newShapeMatrix, shapeLabels = shape_label_patterns(batchSize, shapeIDs=make_shape_label_patterns, softLabel=softLabel)
+            print(shape_map)
             shape_map = [shape_map[0], newShapeMatrix, newShapeMatrix, newShapeMatrix]
+            print(shape_map)
 
         # Define output
         batchImages = numpy.ndarray(shape=(batchSize, self.imSize[0], self.imSize[1]), dtype=numpy.float32)
