@@ -405,6 +405,7 @@ class StimMaker:
             patch[firstRow:(firstRow+self.shapeSize), firstCol:firstCol+self.shapeSize] += self.drawVernier(offset, offset_size)
             patch[patch > 1.0] = 1.0
 
+        print(shapeMatrix.shape[0],shapeMatrix.shape[1], critDist,shapeMatrix.shape[0]*self.shapeSize + (shapeMatrix.shape[0]-1)*critDist + 1)
         if fixed_position is None:
             firstRow = random.randint(padDist, self.imSize[0] - (patch.shape[0]+padDist))
             firstCol = random.randint(padDist, self.imSize[1] - (patch.shape[1]+padDist))
@@ -484,9 +485,8 @@ class StimMaker:
 
         if make_shape_label_patterns is not None:
             newShapeMatrix, shapeLabels = shape_label_patterns(batchSize, shapeIDs=make_shape_label_patterns, softLabel=softLabel)
-            print(len(shape_map[1]),len(shape_map[2]),len(shape_map[3]))
             shape_map = [shape_map[0], newShapeMatrix, newShapeMatrix, newShapeMatrix]
-            print(len(shape_map[1]),len(shape_map[2]),len(shape_map[3]))
+            print(newShapeMatrix)
 
         # Define output
         batchImages = numpy.ndarray(shape=(batchSize, self.imSize[0], self.imSize[1]), dtype=numpy.float32)
