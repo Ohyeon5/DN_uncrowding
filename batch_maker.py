@@ -50,7 +50,7 @@ def shape_label_patterns(batchSize, shapeIDs=[0,1,6], softLabel=False):
             ex) shapeIDs=[0,1,6], shapeMatrix=[[0,1,0,0],[1,1,1,1]], then shapeLabels=[3/8,5/8,0]
     '''
     nIDs  = len(shapeIDs)
-    nCols = numpy.random.randint(0,4,batchSize)*2 +1
+    nCols = numpy.random.randint(0,3,batchSize)*2 +1
     nRows = numpy.random.randint(0,2,batchSize)*2 +1
     IDs   = [numpy.random.randint(0, nIDs, (nRows[i],nCols[i])) for i in range(batchSize)]    
     shapeMatrix = [[[shapeIDs[IDs[b][i][j]] for j in range(len(IDs[b][i]))] for i in range(len(IDs[b]))] for b in range(batchSize)]
@@ -405,9 +405,6 @@ class StimMaker:
             patch[firstRow:(firstRow+self.shapeSize), firstCol:firstCol+self.shapeSize] += self.drawVernier(offset, offset_size)
             patch[patch > 1.0] = 1.0
 
-        print(shapeMatrix.shape[0],shapeMatrix.shape[1], critDist,shapeMatrix.shape[0]*self.shapeSize + (shapeMatrix.shape[0]-1)*critDist + 1)
-        print(padDist, self.imSize[0] - (patch.shape[0]+padDist))
-        print(padDist, self.imSize[1] - (patch.shape[1]+padDist))
         if fixed_position is None:
             firstRow = random.randint(padDist, self.imSize[0] - (patch.shape[0]+padDist))
             firstCol = random.randint(padDist, self.imSize[1] - (patch.shape[1]+padDist))
