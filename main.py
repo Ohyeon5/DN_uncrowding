@@ -173,6 +173,7 @@ def train(parser, subj=0, norm='bn'):
 		torch.cuda.empty_cache()
 
 	shape_types = parser.shape_types
+	softLabel   = parser.softLabel
 	n_shapes 	= len(shape_types)
 	input_size  = parser.input_size
 	maxRow 		= parser.configRC[0]
