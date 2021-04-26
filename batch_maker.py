@@ -55,7 +55,7 @@ def shape_label_patterns(batchSize, shapeIDs=[0,1,6], softLabel=False):
     IDs   = [numpy.random.randint(0, nIDs, (nRows[i],nCols[i])) for i in range(batchSize)]    
     shapeMatrix = [[[shapeIDs[IDs[b][i][j]] for j in range(len(IDs[b][i]))] for i in range(len(IDs[b]))] for b in range(batchSize)]
     if softLabel:
-        shapeLabels = [[numpy.array(shapeMatrix[b]==shapeIDs[i]).sum() for i in range(nIDs)] for b in range(batchSize)]
+        shapeLabels = [[(numpy.array(shapeMatrix[b]) ==shapeIDs[i]).sum() for i in range(nIDs)] for b in range(batchSize)]
     else:
         shapeLabels = [[1 if shapeIDs[i] in numpy.array(shapeMatrix[b]) else 0 for i in range(nIDs)] for b in range(batchSize)]
 
