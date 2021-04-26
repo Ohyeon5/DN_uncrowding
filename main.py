@@ -229,7 +229,7 @@ def train(parser, subj=0, norm='bn'):
 
 		for b in range(0, n_batches):
 
-			train_i, train_v, train_s = make_dataset(btch_size=btch_size, device=device, type=train_type, imgSize=input_size, type_size_list=[shape_types,maxRow,maxCol], make_shape_label_patterns=softLabel, softLabel=softLabel)
+			train_i, train_v, train_s = make_dataset(btch_size=btch_size, device=device, type=train_type, imgSize=input_size, type_size_list=[shape_types,maxRow,maxCol], make_shape_label_patterns=shape_types, softLabel=softLabel)
 
 			if device == 'CUDA':
 			  torch.cuda.empty_cache()
