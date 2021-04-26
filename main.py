@@ -28,6 +28,7 @@ def test(parser, norm='in'):
 	train_type  = parser.train_type
 
 	shape_types = parser.shape_types
+	softLabel   = parser.softLabel
 	n_shapes 	= len(shape_types)
 	input_size  = parser.input_size
 	maxRow 		= parser.configRC[0]
@@ -54,7 +55,7 @@ def test(parser, norm='in'):
 		device = torch.device('cuda')
 
 	# save model checkpoints 
-	model_path  = './model_checkpoints/train_' + train_type + str(maxRow) + str(maxCol) + '/hidden_' + str(n_hidden) + '/n_shapes_' + str(n_shapes) + '/timesteps_'+str(timesteps) + '/lr_' + str(learn_rate) + '/norm_type_' + norm
+	model_path  = './model_checkpoints/train_' + train_type + str(maxRow) + str(maxCol) + '_softlabel_' + str(softLabel) + '/hidden_' + str(n_hidden) + '/n_shapes_' + str(n_shapes) + '/timesteps_'+str(timesteps) + '/lr_' + str(learn_rate) + '/norm_type_' + norm
 	if not os.path.exists(model_path):
 		os.makedirs(model_path)
 
@@ -207,7 +208,7 @@ def train(parser, subj=0, norm='bn'):
 	start_epoch= 0
 
 	# save model checkpoints 
-	model_path  = './model_checkpoints/train_' + train_type + str(maxRow) + str(maxCol) + '/hidden_' + str(n_hidden) + '/n_shapes_' + str(n_shapes) + '/timesteps_'+str(timesteps) + '/lr_' + str(learn_rate) + '/norm_type_' + norm
+	model_path  = './model_checkpoints/train_' + train_type + str(maxRow) + str(maxCol) + '_softlabel_' + str(softLabel) + '/hidden_' + str(n_hidden) + '/n_shapes_' + str(n_shapes) + '/timesteps_'+str(timesteps) + '/lr_' + str(learn_rate) + '/norm_type_' + norm
 	if not os.path.exists(model_path):
 		os.makedirs(model_path)
 	this_model_path = model_path +  '/subject_'+str(subj)+'.pt'
@@ -227,7 +228,7 @@ def train(parser, subj=0, norm='bn'):
 
 		for b in range(0, n_batches):
 
-			train_i, train_v, train_s = make_dataset(btch_size=btch_size, device=device, type=train_type, imgSize=input_size, type_size_list=[shape_types,maxRow,maxCol])
+			train_i, train_v, train_s = make_dataset(btch_size=btch_size, device=device, type=train_type, imgSize=input_size, type_size_list=[shape_types,maxRow,maxCol], make_shape_label_patterns=softLabel, softLabel=softLabel)
 
 			if device == 'CUDA':
 			  torch.cuda.empty_cache()
@@ -294,12 +295,13 @@ def get_parser():
 	parser.add_argument('-n', '--n_batches', type=int, default=32*4, help='Batch size')
 	parser.add_argument('-l', '--learn_rate', type=float, default=1e-4, help='Learning rate') 
 	parser.add_argument('--shape_types', nargs='*', default=[1,2,3,6,7], help='shape types, defined in batch_maker')
+	parser.add_argument('--softLabel', action='store_true', help='Using softLabel in training procesure')
 	parser.add_argument('--input_size', nargs='*', default=[120,120], help='input shape size')
 	parser.add_argument('--configRC', nargs='*', default=[3,3], help='configuration [maxRow, maxCol]')	
 	parser.add_argument('--norm_types', nargs='*', default=['uspn'], help='normalization types')
 	parser.add_argument('--n_hidden', type=int, default=32, help='num of hidden neurons')
 	parser.add_argument('--timesteps', type=int, default=2, help='recurrent timesteps') 
-	parser.add_argument('--train_type', type=str, default='twinShapeConfig', help='training dataset type') 	
+	parser.add_argument('--train_type', type=str, default='train', help='training dataset type') 	
 
 	return parser
 

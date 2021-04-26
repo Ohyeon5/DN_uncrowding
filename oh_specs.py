@@ -120,7 +120,7 @@ def vis_channels(in_tensor, save_path):
 
 # Generate train and test sets
 def make_dataset(btch_size=50, shapeMatrix=[], imgSize=[120,120], shapeSize=18, 
-                 type='train', device='cpu', fix_ver=False, make_shape_label_patterns=None, 
+                 type='train', device='cpu', fix_ver=False, make_shape_label_patterns=None, softLabel=False,
                  type_size_list=[[1,6,7],1,5]):
 
     barWidth = 1
@@ -141,7 +141,7 @@ def make_dataset(btch_size=50, shapeMatrix=[], imgSize=[120,120], shapeSize=18,
     if type is 'train':
         # use this for training set
         ratios = [0, 0, 1, 0]  # ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
-        batch_images, batch_labels = rufus.generate_Batch(btch_size, ratios, noiseLevel=0.1, make_shape_label_patterns=make_shape_label_patterns)
+        batch_images, batch_labels = rufus.generate_Batch(btch_size, ratios, noiseLevel=0.1, make_shape_label_patterns=make_shape_label_patterns, softLabel=softLabel)
         if make_shape_label_patterns is None:
             vernier_labels = batch_labels
             shape_labels   = []

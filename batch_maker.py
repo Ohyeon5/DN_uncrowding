@@ -26,14 +26,38 @@ random_pixels = 0  # stimulus pixels are drawn from random.uniform(1-random_pixe
 def all_test_shapes():
     return seven_shapesgen(5)+shapesgen(5)+Lynns_patterns()+ten_random_patterns()+Lynns_patterns()
 
-def shape_label_patterns(batchSize, shapeIDs=[0,1,6]):
-    # make random shape matrix with limited num of shapeIDs
+def shape_label_patterns(batchSize, shapeIDs=[0,1,6], softLabel=False):
+    ''' make random shape matrix with the limited num of shapeIDs
+    
+    Parameters
+    -----------
+    batchSize: int
+        the number of batches
+    shapeIDs : list
+        the list of shape IDs e.g., 0-vernier, 1-square, 6-star
+    softLabel: bool
+        (default: False) only accounts existence of the shape, ex) shapeMatrix=[0,1,0,0], shapeLabels=[1,1,0]
+        If True: counts the number of each shape, ex) shapeMatrix=[0,1,0,0], shapeLabels=[3/4,1/4,0]
+
+    Returns
+    --------
+    shapeMatrix: list (batchsize x [nCols x nRows])
+        shape matrix for each batch, nCols and nRows varies for each batch
+    shapeLables: list (batchsize x len(shapeIDs))
+        if not softLabel: shape exsistence labels, 1 if the corresponding label exists, otherwise 0
+            ex) shapeIDs=[0,1,6], shapeMatrix=[[0,1,0,0],[1,1,1,1]], then shapeLabels=[1,1,0]
+        if softLabel: shape counts, # shape/# total shapes
+            ex) shapeIDs=[0,1,6], shapeMatrix=[[0,1,0,0],[1,1,1,1]], then shapeLabels=[3/8,5/8,0]
+    '''
     nIDs  = len(shapeIDs)
     nCols = numpy.random.randint(0,4,batchSize)*2 +1
     nRows = numpy.random.randint(0,2,batchSize)*2 +1
     IDs   = [numpy.random.randint(0, nIDs, (nRows[i],nCols[i])) for i in range(batchSize)]    
     shapeMatrix = [[[shapeIDs[IDs[b][i][j]] for j in range(len(IDs[b][i]))] for i in range(len(IDs[b]))] for b in range(batchSize)]
-    shapeLabels = [[1 if shapeIDs[i] in numpy.array(shapeMatrix[b]) else 0 for i in range(nIDs)] for b in range(batchSize)]
+    if softLabel:
+        shapeLabels = [[1 if shapeIDs[i] in numpy.array(shapeMatrix[b]) else 0 for i in range(nIDs)] for b in range(batchSize)]
+    else:
+        shapeLabels = [[1 if shapeIDs[i] in numpy.array(shapeMatrix[b]) else 0 for i in range(nIDs)] for b in range(batchSize)]
 
     return shapeMatrix, shapeLabels
 
@@ -439,7 +463,7 @@ class StimMaker:
         return batchImages, batchLabels
 
 
-    def generate_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None, shapeMatrix=None, noise_patch=None, offset=None, offset_size=None, fixed_noise=None, make_shape_label_patterns=None):
+    def generate_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None, shapeMatrix=None, noise_patch=None, offset=None, offset_size=None, fixed_noise=None, make_shape_label_patterns=None, softLabel=False):
 
         # ratios : # ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier outside shape; 3-vernier inside shape
         # in case ratio didn't fit required size, standard output
@@ -459,7 +483,7 @@ class StimMaker:
         shapeLabels = []
 
         if make_shape_label_patterns is not None:
-            newShapeMatrix, shapeLabels = shape_label_patterns(batchSize, shapeIDs=make_shape_label_patterns)
+            newShapeMatrix, shapeLabels = shape_label_patterns(batchSize, shapeIDs=make_shape_label_patterns, softLabel=softLabel)
             shape_map = [shape_map[0], newShapeMatrix, newShapeMatrix, newShapeMatrix]
 
         # Define output
