@@ -142,6 +142,8 @@ def make_dataset(btch_size=50, shapeMatrix=[], imgSize=[120,120], shapeSize=18,
         # use this for training set
         ratios = [0, 0, 1, 0]  # ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
         batch_images, batch_labels = rufus.generate_Batch(btch_size, ratios, noiseLevel=0.1, make_shape_label_patterns=make_shape_label_patterns, softLabel=softLabel)
+        
+        print(batch_labels)
         if make_shape_label_patterns is None:
             vernier_labels = batch_labels
             shape_labels   = []
@@ -150,7 +152,6 @@ def make_dataset(btch_size=50, shapeMatrix=[], imgSize=[120,120], shapeSize=18,
             shape_labels   = torch.Tensor(batch_labels[1]).to(device=device, dtype=torch.int64)
 
         batch_images, vernier_labels = transform_arrays(batch_images, vernier_labels, device)
-        print(shape_labels[0])
     
     elif 'twinShapeConfig' in type:
         # training with equal-shape configurations
