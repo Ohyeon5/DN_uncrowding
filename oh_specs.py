@@ -150,6 +150,7 @@ def make_dataset(btch_size=50, shapeMatrix=[], imgSize=[120,120], shapeSize=18,
             shape_labels   = torch.Tensor(batch_labels[1]).to(device=device, dtype=torch.int64)
 
         batch_images, vernier_labels = transform_arrays(batch_images, vernier_labels, device)
+        print(shape_labels[0])
     
     elif 'twinShapeConfig' in type:
         # training with equal-shape configurations
