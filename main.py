@@ -243,8 +243,7 @@ def train(parser, subj=0, norm='bn'):
 
 			# loss: shape cross-entropy loss + vernier cross-emtropy loss
 			loss = crit_v(out_v,train_v) + crit_s(out_s,train_s)
-			print(out_s, train_s)
-			n_train_errs[0] += (out_s.argmax(1) != train_s).sum()
+			n_train_errs[0] += (out_s.argmax(1) != train_s.argmax(1)).sum()
 			n_train_errs[1] += (out_v.argmax(1) != train_v).sum()
 
 			if isnan(loss):

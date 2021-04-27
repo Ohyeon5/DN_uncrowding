@@ -58,8 +58,7 @@ def shape_label_patterns(batchSize, shapeIDs=[0,1,6], softLabel=False):
         shapeLabels = [[(numpy.array(shapeMatrix[b]) ==shapeIDs[i]).mean() for i in range(nIDs)] for b in range(batchSize)]
     else:
         shapeLabels = [[1 if shapeIDs[i] in numpy.array(shapeMatrix[b]) else 0 for i in range(nIDs)] for b in range(batchSize)]
-
-    print(shapeMatrix[0], shapeLabels[0])
+    
     return shapeMatrix, shapeLabels
 
 
