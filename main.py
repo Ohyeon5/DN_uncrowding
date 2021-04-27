@@ -204,10 +204,11 @@ def train(parser, subj=0, norm='bn'):
 
 	model.to(device)
 	optims     = torch.optim.Adam(model.parameters(), lr=learn_rate)
+	crit_v     = nn.CrossEntropyLoss().to(device)
 	if softLabel:
-		crit = nn.MultiLabelMarginLoss().to(device)
+		crit_s = nn.MultiLabelMarginLoss().to(device)
 	else:
-		crit = nn.CrossEntropyLoss().to(device)
+		crit_s = nn.CrossEntropyLoss().to(device)
 	losslogger = OrderedDict([('train_errs', np.zeros((2000,2))),('val_errs', [])]) # save all errors 
 	start_epoch= 0
 
@@ -241,7 +242,7 @@ def train(parser, subj=0, norm='bn'):
 			out_s, out_v = model(train_i)
 
 			# loss: shape cross-entropy loss + vernier cross-emtropy loss
-			loss = crit(out_v,train_v) + crit(out_s,train_s)
+			loss = crit_v(out_v,train_v) + crit_s(out_s,train_s)
 			n_train_errs[0] += (out_s.argmax(1) != train_s).sum()
 			n_train_errs[1] += (out_v.argmax(1) != train_v).sum()
 
