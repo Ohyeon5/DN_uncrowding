@@ -9,4 +9,4 @@
 training_log.txt
 
 # .sh Run files
-*.sh
+run_config.sh
