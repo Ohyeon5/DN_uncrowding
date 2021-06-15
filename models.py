@@ -22,7 +22,9 @@ def define_norm(norm_type,n_channel,n_group=None):
 		if n_group is None: n_group=2 # default group num is 2
 		return nn.GroupNorm(n_group,n_channel)
 	elif norm_type == 'in':# instance normalization
-		return nn.GroupNorm(n_channel,n_channel)
+		return nn.InstanceNorm2d(n_channel, affine=True)
+	elif norm_type == 'inSNR': # instance normalization and SNR module
+		return SNR_block(n_channel)
 	elif norm_type == 'ln':# layer normalization
 		return nn.GroupNorm(1,n_channel)
 	elif norm_type == 'None':
@@ -658,11 +660,21 @@ class feedforwardSNRCNN(nn.Module):
 	""" 
 	Feedforward CNN network with Style normalization and restitution.
 	SNR module is largely adapted from https://github.com/microsoft/SNR by Jin et al.
+	|_ SNR
+		|_ classification
+			|_ PACS
+				|_ model_resnet.py 
+					|_ class: ModelAggregate_SNR_CausalityLoss
+				|_ resnet_SNR.py
+					|_ model: resnet18_snr_causality
+
+	Workflow:
+		
 	"""
 
-	def __init__(self, hidden_dim=32, n_shapes=5,input_size=[224,224],norm='in_SNR',n_group=None, device='cpu'):
+	def __init__(self, hidden_dim=32, n_shapes=5,input_size=[224,224],norm='inSNR',n_group=None, device='cpu'):
 
-		super(feedforwardCNN, self).__init__()
+		super(feedforwardSNRCNN, self).__init__()
 
 		# specify conv params
 		ini_k = [7,5,3]
@@ -680,25 +692,27 @@ class feedforwardSNRCNN(nn.Module):
 
 		self.device = device
 
-		if 'in' in norm:
+		if 'inSNR' in norm:
 			norms = norm.split('_')
 			if len(norms) is 1:
 				norm = [norm]*3
 			else:
 				norm = ['None']*3
 				for mm in norms[1]:
-					norm[int(mm)] = 'in'
+					norm[int(mm)] = 'inSNR'
 		else:
 			norm = [norm]*3
 
-		print('Norms are {}'.format(norm))
+		self.norm = norm
+
+		print('Norms are {}'.format(self.norm))
 
 		self.conv0 = nn.Conv2d( 3,  8, kernel_size=ini_k[0], stride=ini_s[0], padding=ini_p[0])
-		self.norm0 = define_norm(norm[0],  8, n_group)
+		self.norm0 = define_norm(self.norm[0],  8, n_group)
 		self.conv1 = nn.Conv2d( 8, 16, kernel_size=ini_k[1], stride=ini_s[1], padding=ini_p[1])
-		self.norm1 = define_norm(norm[1], 16, n_group)
+		self.norm1 = define_norm(self.norm[1], 16, n_group)
 		self.conv2 = nn.Conv2d(16, 32, kernel_size=ini_k[2], stride=ini_s[2], padding=ini_p[2])
-		self.norm2 = define_norm(norm[2], 32, n_group)
+		self.norm2 = define_norm(self.norm[2], 32, n_group)
 
 		self.early_decoder = nn.Sequential(
 		      nn.BatchNorm1d(flatten_len),
@@ -710,64 +724,145 @@ class feedforwardSNRCNN(nn.Module):
 		self.vernier_decoder = nn.Sequential(
 		      nn.Linear(hidden_dim,2),
 		      nn.Softmax())	
+
+		for m in self.modules():
+			if isinstance(m, nn.Conv2d):
+				nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+				if m.bias is not None:
+					nn.init.constant_(m.bias, 0)
+			elif isinstance(m, nn.BatchNorm2d):
+				nn.init.constant_(m.weight, 1)
+				nn.init.constant_(m.bias, 0)
+			elif isinstance(m, nn.BatchNorm1d):
+				nn.init.constant_(m.weight, 1)
+				nn.init.constant_(m.bias, 0)
+			elif isinstance(m, nn.InstanceNorm2d):
+				nn.init.constant_(m.weight, 1)
+				nn.init.constant_(m.bias, 0)
+			elif isinstance(m, nn.Linear):
+				nn.init.normal_(m.weight, 0, 0.01)
+				if m.bias is not None:
+					nn.init.constant_(m.bias, 0)
     
 	def forward(self, x):
 
+		x_INs      = []
+		x_usefuls  = []
+		x_uselesses= []
+		p_INs      = []
+		p_usefuls  = []
+		p_uselesses= []
+
 		x = self.conv0(x)
-		x = self.norm0(x) 
 		x = F.relu(x)
+		if self.norm[0] is not None:
+			x_in, x_uf, x_ul, p_in, p_uf, p_ul = self.norm0(x) 
+			x_INs      .append(x_in)
+			x_usefuls  .append(x_uf)
+			x_uselesses.append(x_ul)
+			p_INs      .append(p_in)
+			p_usefuls  .append(p_uf)
+			p_uselesses.append(p_ul)
 		x = self.conv1(x)
-		x = self.norm1(x) 
 		x = F.relu(x)
+		if self.norm[1] is not None:
+			x_in, x_uf, x_ul, p_in, p_uf, p_ul = self.norm1(x) 
+			x_INs      .append(x_in)
+			x_usefuls  .append(x_uf)
+			x_uselesses.append(x_ul)
+			p_INs      .append(p_in)
+			p_usefuls  .append(p_uf)
+			p_uselesses.append(p_ul)
 		x = self.conv2(x)
-		x = self.norm2(x)
 		x = F.relu(x)
+		if self.norm[2] is not None:
+			x_in, x_uf, x_ul, p_in, p_uf, p_ul = self.norm2(x)
+			x_INs      .append(x_in)
+			x_usefuls  .append(x_uf)
+			x_uselesses.append(x_ul)
+			p_INs      .append(p_in)
+			p_usefuls  .append(p_uf)
+			p_uselesses.append(p_ul)
 
 		x = torch.flatten(x, start_dim=1) # flatten tensor from channel dimension (torch tensor: b c w h)
 		x = self.early_decoder(x)
 		output_shape   = self.shape_decoder(x)
 		output_vernier = self.vernier_decoder(x)      
 
-		return output_shape, output_vernier
+		return output_shape, output_vernier, \
+			   x_INs, x_usefuls, x_uselesses,\
+			   p_INs, p_usefuls, p_uselesses
+
+
+class SNR_block(nn.Module):
+	'''A mini-network for the SNR module
+	
+	1. Instance normalization
+	2. Channel attention
+
+	'''
+
+	def __init__(self, in_channels, num_classes=2):
+		super(SNR_block, self).__init__()
+
+		self.IN = nn.InstanceNorm2d(in_channels, affine=True)
+		self.global_avgpool = nn.AdaptiveAvgPool2d(1)
+		self.fc = nn.Linear(in_channels, num_classes)
+		# SE for selection:
+		self.style_reid_laye = ChannelGate_sub(in_channels, num_gates=in_channels, return_gates=False,
+									gate_activation='sigmoid', reduction=4, layer_norm=False)
+
+	def forward(self, x): 
+		x_IN = self.IN(x)
+		x_style = x-x_IN
+		x_style_reid_useful,x_style_reid_useless, selective_weight_useful = self.style_reid_laye(x_style)
+		x = x_IN + x_style_reid_useful
+		x_useless = x_IN + x_style_reid_useless
+
+		return  x_IN, x, x_useless, \
+				F.softmax(self.fc(self.global_avgpool(x_IN).view(x_IN.size(0), -1))), \
+				F.softmax(self.fc(self.global_avgpool(x).view(x.size(0), -1))), \
+				F.softmax(self.fc(self.global_avgpool(x_useless).view(x_useless.size(0), -1)))
+
 
 
 class ChannelGate_sub(nn.Module):
-    """A mini-network that generates channel-wise gates conditioned on input tensor."""
+	"""A mini-network that generates channel-wise gates conditioned on input tensor."""
 
-    def __init__(self, in_channels, num_gates=None, return_gates=False,
-                 gate_activation='sigmoid', reduction=16, layer_norm=False):
-        super(ChannelGate_sub, self).__init__()
-        if num_gates is None:
-            num_gates = in_channels
-        self.return_gates = return_gates
-        self.global_avgpool = nn.AdaptiveAvgPool2d(1)
-        self.fc1 = nn.Conv2d(in_channels, in_channels//reduction, kernel_size=1, bias=True, padding=0)
-        self.norm1 = None
-        if layer_norm:
-            self.norm1 = nn.LayerNorm((in_channels//reduction, 1, 1))
-        self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Conv2d(in_channels//reduction, num_gates, kernel_size=1, bias=True, padding=0)
-        if gate_activation == 'sigmoid':
-            self.gate_activation = nn.Sigmoid()
-        elif gate_activation == 'relu':
-            self.gate_activation = nn.ReLU(inplace=True)
-        elif gate_activation == 'linear':
-            self.gate_activation = None
-        else:
-            raise RuntimeError("Unknown gate activation: {}".format(gate_activation))
+	def __init__(self, in_channels, num_gates=None, return_gates=False,
+				 gate_activation='sigmoid', reduction=16, layer_norm=False):
+		super(ChannelGate_sub, self).__init__()
+		if num_gates is None:
+			num_gates = in_channels
+		self.return_gates = return_gates
+		self.global_avgpool = nn.AdaptiveAvgPool2d(1)
+		self.fc1 = nn.Conv2d(in_channels, in_channels//reduction, kernel_size=1, bias=True, padding=0)
+		self.norm1 = None
+		if layer_norm:
+			self.norm1 = nn.LayerNorm((in_channels//reduction, 1, 1))
+		self.relu = nn.ReLU(inplace=True)
+		self.fc2 = nn.Conv2d(in_channels//reduction, num_gates, kernel_size=1, bias=True, padding=0)
+		if gate_activation == 'sigmoid':
+			self.gate_activation = nn.Sigmoid()
+		elif gate_activation == 'relu':
+			self.gate_activation = nn.ReLU(inplace=True)
+		elif gate_activation == 'linear':
+			self.gate_activation = None
+		else:
+			raise RuntimeError("Unknown gate activation: {}".format(gate_activation))
 
-    def forward(self, x):
-        input = x
-        x = self.global_avgpool(x)
-        x = self.fc1(x)
-        if self.norm1 is not None:
-            x = self.norm1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
-        if self.gate_activation is not None:
-            x = self.gate_activation(x)
-        if self.return_gates:
-            return x
-        return input * x, input * (1 - x), x
+	def forward(self, x):
+		input = x
+		x = self.global_avgpool(x)
+		x = self.fc1(x)
+		if self.norm1 is not None:
+			x = self.norm1(x)
+		x = self.relu(x)
+		x = self.fc2(x)
+		if self.gate_activation is not None:
+			x = self.gate_activation(x)
+		if self.return_gates:
+			return x
+		return input * x, input * (1 - x), x
 
 

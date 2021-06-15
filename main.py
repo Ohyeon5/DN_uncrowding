@@ -70,7 +70,10 @@ def test(parser, norm='in'):
 	for i,subj in enumerate(subjects):
 		
 		# initialize the model
-		if 'uspn' in norm:
+		if 'inSNR' in norm:
+			print('Initialize '+norm+' model')
+			model = feedforwardSNRCNN(hidden_dim=n_hidden,n_shapes=n_shapes,input_size=input_size,norm=norm,device=device)
+		elif 'uspn' in norm:
 			print('Initialize '+norm+' model')
 			model = unfoldSlidePlainNormCNN(hidden_dim=n_hidden,n_shapes=n_shapes,input_size=input_size,norm=norm,timesteps=timesteps,device=device)
 		elif 'in_fb' in norm:
@@ -114,7 +117,11 @@ def test(parser, norm='in'):
 					vischannel_shapeType = None
 
 				with torch.no_grad(): # testing: no gradient needed
-					if norm is 'in_12_e':
+					if 'inSNR' in norm:
+						out_s, out_v, \
+						x_INs, x_usefuls, x_uselesses,\
+						p_INs, p_usefuls, p_uselesses  = model(train_i[s])
+					elif norm == 'in_12_e':
 						out_s, out_v = model.forward_ent(test_i[s])
 					else:
 						out_s, out_v = model(test_i[s])
@@ -186,7 +193,10 @@ def train(parser, subj=0, norm='bn'):
 		torch.cuda.empty_cache()
 
 	# initialize the model
-	if 'uspn' in norm:
+	if 'inSNR' in norm:
+		print('Initialize '+norm+' model')
+		model = feedforwardSNRCNN(hidden_dim=n_hidden,n_shapes=n_shapes,input_size=input_size,norm=norm,device=device)
+	elif 'uspn' in norm:
 		print('Initialize '+norm+' model')
 		model = unfoldSlidePlainNormCNN(hidden_dim=n_hidden,n_shapes=n_shapes,input_size=input_size,norm=norm,timesteps=timesteps,device=device)
 	elif 'in_fb' in norm:
@@ -239,15 +249,25 @@ def train(parser, subj=0, norm='bn'):
 			  torch.cuda.empty_cache()
 
 			model.train()
-			out_s, out_v = model(train_i)
-
-			# loss: shape cross-entropy loss + vernier cross-emtropy loss
-			loss = crit_v(out_v,train_v) + crit_s(out_s,train_s)
+			# SNR module has additional 'dual causality loss'
+			if 'inSNR' in norm:
+				out_s, out_v, \
+				x_INs, x_usefuls, x_uselesses,\
+				p_INs, p_usefuls, p_uselesses  = model(train_i)
+				# loss: shape cross-entropy loss + vernier cross-emtropy loss + dual-causality loss
+				loss_causality = get_all_causality_loss(p_INs, p_usefuls, p_uselesses)
+				loss = crit_v(out_v,train_v) + crit_s(out_s,train_s) + loss_causality
+				print(loss, loss_causality)
+			else:
+				out_s, out_v = model(train_i)
+				# loss: shape cross-entropy loss + vernier cross-emtropy loss
+				loss = crit_v(out_v,train_v) + crit_s(out_s,train_s)
+			
 			n_train_errs[0] += (out_s.argmax(1) != train_s.argmax(1)).sum()
 			n_train_errs[1] += (out_v.argmax(1) != train_v).sum()
 
 			if isnan(loss):
-				print('Loss is Nan, quite procedure to search better initial weights')
+				print('Loss is Nan, consider to quit the procedure to search better initial weights')
 				# rename current saved ckpt 
 				this_model_path = model_path +  '/subject_'+str(subj)+'.pt'
 				if os.path.exists(this_model_path):
@@ -282,6 +302,34 @@ def train(parser, subj=0, norm='bn'):
 			    % (e,divmod(e_end-e_start,60)[0],divmod(e_end-e_start,60)[1],divmod(e_save-e_end,60)[0],divmod(e_save-e_end,60)[1]))
 	return
 
+# Training related Functions for SNR modules
+def get_all_causality_loss(p_INs, p_usefuls, p_uselesses):
+	
+	# Parameter sanity check
+	if not len(p_INs) == len(p_usefuls) == len(p_uselesses):
+		RuntimeError("Parameters of get_all_causality_loss should have same length, but they are {}, {}, and {}".format(len(p_INs),len(p_usefuls),len(p_uselesses)))
+
+	for ii, (p_in, p_uf, p_ul) in enumerate(zip(p_INs,p_usefuls,p_uselesses)):
+		if ii==0: ###TODO### this redundant line is to avoid unexpected gradient cut-offs 
+			loss_causality = 0.01*get_causality_loss(get_entropy(p_in),get_entropy(p_uf),get_entropy(p_ul))
+		else:
+			loss_causality += 0.01*get_causality_loss(get_entropy(p_in),get_entropy(p_uf),get_entropy(p_ul))
+
+	return loss_causality
+
+def get_entropy(p_softmax):
+	# exploit ENTropy minimization (ENT) to help DA,
+	mask = p_softmax.ge(0.000001)
+	mask_out = torch.masked_select(p_softmax, mask)
+	entropy = -(torch.sum(mask_out * torch.log(mask_out)))
+	return (entropy / float(p_softmax.size(0)))
+
+def get_causality_loss(x_IN_entropy, x_useful_entropy, x_useless_entropy):
+	ranking_loss = torch.nn.SoftMarginLoss()
+	y = torch.ones_like(x_IN_entropy)
+	return ranking_loss(x_IN_entropy - x_useful_entropy, y) + ranking_loss(x_useless_entropy - x_IN_entropy, y)
+
+
 def get_parser():
 	parser = argparse.ArgumentParser(
 	    prog='Vernier discrimination task with flexible DN networks',
@@ -310,14 +358,15 @@ def get_parser():
 
 	return parser
 
+
 if __name__ == '__main__':
 	parser = get_parser().parse_args()
-	if parser.train:
+	if parser.train or parser.all_train_test:
 		print('TRAIN norm_types... {}'.format(parser.norm_types))
 		for norm in parser.norm_types:
 			for subj in range(0,parser.n_subjs):
 				train(parser,norm=norm, subj=subj)
-	if parser.test:
+	if parser.test or parser.all_train_test:
 		print('TEST ...')		
 		for norm in parser.norm_types:
 			test(parser,norm=norm)
