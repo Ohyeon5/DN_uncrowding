@@ -758,7 +758,7 @@ class feedforwardSNRCNN(nn.Module):
 
 		x = self.conv0(x)
 		x = F.relu(x)
-		if self.norm[0] is not None:
+		if self.norm[0] != 'None':
 			x_in, x_uf, x_ul, p_in, p_uf, p_ul, l_in, l_uf, l_ul = self.norm0(x) 
 			x_INs      .append(x_in)
 			x_usefuls  .append(x_uf)
@@ -771,7 +771,7 @@ class feedforwardSNRCNN(nn.Module):
 			l_uselesses.append(l_ul)
 		x = self.conv1(x)
 		x = F.relu(x)
-		if self.norm[1] is not None:
+		if self.norm[1] != 'None':
 			x_in, x_uf, x_ul, p_in, p_uf, p_ul, l_in, l_uf, l_ul = self.norm1(x) 
 			x_INs      .append(x_in)
 			x_usefuls  .append(x_uf)
@@ -784,7 +784,7 @@ class feedforwardSNRCNN(nn.Module):
 			l_uselesses.append(l_ul)
 		x = self.conv2(x)
 		x = F.relu(x)
-		if self.norm[2] is not None:
+		if self.norm[2] != 'None':
 			x_in, x_uf, x_ul, p_in, p_uf, p_ul, l_in, l_uf, l_ul = self.norm2(x)
 			x_INs      .append(x_in)
 			x_usefuls  .append(x_uf)
