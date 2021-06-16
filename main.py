@@ -120,7 +120,8 @@ def test(parser, norm='in'):
 					if 'inSNR' in norm:
 						out_s, out_v, \
 						x_INs, x_usefuls, x_uselesses,\
-						p_INs, p_usefuls, p_uselesses  = model(train_i[s])
+						p_INs, p_usefuls, p_uselesses,\
+						l_INs, l_usefuls, l_uselesses  =   = model(test_i[s])
 					elif norm == 'in_12_e':
 						out_s, out_v = model.forward_ent(test_i[s])
 					else:
