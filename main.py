@@ -260,7 +260,7 @@ def train(parser, subj=0, norm='bn'):
 				loss_causality = get_all_causality_loss(p_INs, p_usefuls, p_uselesses) \
 				                + 0.05 * crit_v(l_usefuls[-1],train_v)
 				loss = crit_v(out_v,train_v) + crit_s(out_s,train_s) + loss_causality
-				print(loss, loss_causality)
+				# print(loss, loss_causality)
 			else:
 				out_s, out_v = model(train_i)
 				# loss: shape cross-entropy loss + vernier cross-emtropy loss
