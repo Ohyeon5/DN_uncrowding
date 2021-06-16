@@ -121,7 +121,7 @@ def test(parser, norm='in'):
 						out_s, out_v, \
 						x_INs, x_usefuls, x_uselesses,\
 						p_INs, p_usefuls, p_uselesses,\
-						l_INs, l_usefuls, l_uselesses  =   = model(test_i[s])
+						l_INs, l_usefuls, l_uselesses = model(test_i[s])
 					elif norm == 'in_12_e':
 						out_s, out_v = model.forward_ent(test_i[s])
 					else:
