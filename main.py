@@ -253,9 +253,12 @@ def train(parser, subj=0, norm='bn'):
 			if 'inSNR' in norm:
 				out_s, out_v, \
 				x_INs, x_usefuls, x_uselesses,\
-				p_INs, p_usefuls, p_uselesses  = model(train_i)
+				p_INs, p_usefuls, p_uselesses,\
+				l_INs, l_usefuls, l_uselesses  = model(train_i)
+
 				# loss: shape cross-entropy loss + vernier cross-emtropy loss + dual-causality loss
-				loss_causality = get_all_causality_loss(p_INs, p_usefuls, p_uselesses)
+				loss_causality = get_all_causality_loss(p_INs, p_usefuls, p_uselesses) \
+				                + 0.05 * crit_v(l_usefuls[-1],train_v)
 				loss = crit_v(out_v,train_v) + crit_s(out_s,train_s) + loss_causality
 				print(loss, loss_causality)
 			else:
@@ -311,9 +314,9 @@ def get_all_causality_loss(p_INs, p_usefuls, p_uselesses):
 
 	for ii, (p_in, p_uf, p_ul) in enumerate(zip(p_INs,p_usefuls,p_uselesses)):
 		if ii==0: ###TODO### this redundant line is to avoid unexpected gradient cut-offs 
-			loss_causality = 0.01*get_causality_loss(get_entropy(p_in),get_entropy(p_uf),get_entropy(p_ul))
+			loss_causality = 0.05*get_causality_loss(get_entropy(p_in),get_entropy(p_uf),get_entropy(p_ul))
 		else:
-			loss_causality += 0.01*get_causality_loss(get_entropy(p_in),get_entropy(p_uf),get_entropy(p_ul))
+			loss_causality += 0.05*get_causality_loss(get_entropy(p_in),get_entropy(p_uf),get_entropy(p_ul))
 
 	return loss_causality
 
